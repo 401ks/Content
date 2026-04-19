@@ -1,81 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AR Menu</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AR.js Restaurant Demo</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }
-    .card { max-width: 400px; margin: 0 auto; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    h1 { margin: 0 0 8px; color: #111; font-size: 22px; }
-    .desc { color: #555; margin: 0 0 12px; line-height: 1.5; font-size: 14px; }
-    .price { font-size: 20px; font-weight: 700; color: #e63946; margin-bottom: 16px; }
+    body { margin: 0; overflow: hidden; font-family: system-ui; background: #000; }
     
-    model-viewer { width: 100%; height: 280px; background: #eee; border-radius: 12px; margin-bottom: 12px; }
-    [slot="ar-button"] {
-      background: #1d3557; color: white; border: none; padding: 14px; border-radius: 10px;
-      font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; display: block;
+    /* 🔑 CRITICAL: Fixes the super-zoomed camera on mobile */
+    video { object-fit: cover !important; width: 100vw !important; height: 100vh !important; }
+    .a-canvas { width: 100% !important; height: 100% !important; }
+    
+    .overlay {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.75); color: #fff; padding: 10px 16px;
+      border-radius: 20px; font-size: 14px; text-align: center; z-index: 999;
+      pointer-events: none; line-height: 1.4;
     }
-    #debug {
-      background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px;
-      font-size: 12px; font-family: monospace; line-height: 1.6; margin-top: 12px;
-    }
-    .pass { color: #4ade80; }
-    .fail { color: #f87171; }
-    .warn { color: #fbbf24; }
+    .overlay b { color: #ff6b6b; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>🦆 Duck Confit</h1>
-    <p class="desc">Slow-cooked with herbs, crispy skin, roasted potatoes.</p>
-    <div class="price">$24.99</div>
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:720; displayWidth: 1280; displayHeight: 720; fps: 30; debugUIEnabled: false;"
+    renderer="antialias: true; alpha: true; colorManagement: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
 
-    <model-viewer
-      id="mv"
-      src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb"
-      ar
-      ar-modes="webxr quick-look"
-      camera-controls
-      auto-rotate
-      shadow-intensity="1"
-      alt="3D Duck">
-      <button slot="ar-button">📱 View on Your Table</button>
-    </model-viewer>
+    <a-assets>
+      <a-asset-item id="duck" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb"></a-asset-item>
+    </a-assets>
 
-    <div id="debug">Running diagnostics...</div>
-  </div>
+    <!-- Tracks the standard Hiro marker -->
+    <a-marker preset="hiro">
+      <a-entity gltf-model="#duck" scale="0.15 0.15 0.15" position="0 0 0"></a-entity>
+    </a-marker>
 
-  <script>
-    const debug = document.getElementById('debug');
-    const mv = document.getElementById('mv');
+    <a-camera camera="fov: 60; far: 10000" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
+  </a-scene>
 
-    async function runDiagnostics() {
-      let log = [];
-      const add = (msg, type = '') => log.push(`<span class="${type}">●</span> ${msg}`);
+  <div class="overlay">📸 Point camera at the <b>Hiro Marker</b> below to see the duck</div>
 
-      add(`Secure Context: ${window.isSecureContext ? '✅ PASS' : '❌ FAIL (HTTPS required)'}`, window.isSecureContext ? 'pass' : 'fail');
-      
-      if ('xr' in navigator) {
-        try {
-          const supported = await navigator.xr.isSessionSupported('immersive-ar');
-          add(`WebXR AR Session: ${supported ? '✅ PASS' : '❌ FAIL (Not supported on this device)'}`, supported ? 'pass' : 'fail');
-        } catch(e) {
-          add(`WebXR Check Error: ${e.message}`, 'warn');
-        }
-      } else {
-        add(`WebXR API: ❌ FAIL (Browser doesn't support WebXR)`, 'fail');
-      }
-
-      // Check model load
-      mv.addEventListener('error', () => add('Model Load: ❌ FAIL', 'fail'), { once: true });
-      mv.addEventListener('load', () => add('Model Load: ✅ PASS', 'pass'), { once: true });
-
-      debug.innerHTML = log.join('<br>');
-    }
-
-    runDiagnostics();
-  </script>
+  <!-- Hidden Hiro marker for quick testing -->
+  <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" 
+       style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: 200px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 998;" 
+       alt="Hiro Marker">
 </body>
 </html>
