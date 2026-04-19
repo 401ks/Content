@@ -6,156 +6,143 @@
   <title>AR Restaurant Menu</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    :root { --primary: #e63946; --dark: #1d3557; --light: #f8f9fa; }
+    :root { --primary: #e63946; --dark: #1d3557; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: var(--light); padding: 20px; padding-bottom: 40px; min-height: 100vh; }
-
-    header { text-align: center; margin-bottom: 20px; }
-    h1 { color: var(--dark); font-size: 22px; margin-bottom: 4px; }
-    .platform-msg { 
-      background: #fff3cd; color: #856404; padding: 10px 14px; border-radius: 8px; 
-      font-size: 13px; text-align: center; margin-bottom: 16px; display: none;
+    body { background: #f8f9fa; padding: 20px; padding-bottom: 60px; }
+    
+    .card {
+      background: white; border-radius: 16px; padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 400px; margin: 0 auto;
     }
-
-    .dish-card {
-      background: white; border-radius: 12px; overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 0 auto; max-width: 400px;
+    h2 { color: var(--dark); margin-bottom: 8px; }
+    .desc { color: #555; font-size: 14px; margin-bottom: 12px; line-height: 1.4; }
+    .price { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+    
+    #ar-btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: var(--dark); color: white; font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s;
     }
-    .dish-header { height: 120px; background: linear-gradient(135deg, #457b9d, #1d3557); display: flex; align-items: center; justify-content: center; font-size: 40px; }
-    .dish-body { padding: 16px; }
-    .dish-name { font-size: 18px; font-weight: 700; color: var(--dark); }
-    .dish-desc { font-size: 13px; color: #555; margin: 6px 0 10px; line-height: 1.4; }
-    .dish-price { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
-
-    #ar-trigger {
-      width: 100%; background: var(--dark); color: white; border: none; padding: 12px;
-      border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    #ar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    #status {
+      margin-top: 12px; font-size: 13px; text-align: center; min-height: 20px;
     }
-    #ar-trigger:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error { color: var(--primary); }
+    .success { color: #2a9d8f; }
 
-    /* Debug Panel */
-    #debug {
-      position: fixed; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.85); 
-      color: #0f0; font-family: monospace; font-size: 12px; padding: 10px; border-radius: 6px; 
-      max-height: 120px; overflow-y: auto; display: none; z-index: 1000;
+    model-viewer {
+      width: 100%; height: 280px; background: #eee; border-radius: 12px;
+      margin-top: 16px; --poster-color: transparent;
     }
-    #debug.active { display: block; }
-
-    model-viewer { width: 100%; height: 350px; background: #f0f0f0; border-radius: 8px; margin-top: 16px; }
+    
+    /* Built-in AR button (hidden until needed as fallback) */
+    [slot="ar-button"] {
+      display: none; position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: white; color: #333; border: none; padding: 10px 20px; border-radius: 8px;
+      font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>🦆 Table View AR</h1>
-    <p>Point camera • Tap table • Order</p>
-  </header>
+  <div class="card">
+    <h2>🦆 Classic Duck Confit</h2>
+    <p class="desc">Slow-cooked with herbs, crispy skin, roasted potatoes & red wine jus.</p>
+    <div class="price">$24.99</div>
+    
+    <button id="ar-btn" disabled>⏳ Initializing...</button>
+    <div id="status"></div>
 
-  <div class="platform-msg" id="platform-msg"></div>
-
-  <div class="dish-card">
-    <div class="dish-header">🍽️</div>
-    <div class="dish-body">
-      <div class="dish-name">Classic Duck Confit</div>
-      <div class="dish-desc">Slow-cooked with herbs, crispy skin, roasted potatoes.</div>
-      <div class="dish-price">$24.99</div>
-      <button id="ar-trigger" disabled>⏳ Checking AR support...</button>
-    </div>
+    <model-viewer 
+      id="mv" 
+      src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb"
+      ar 
+      ar-modes="webxr quick-look"
+      camera-controls 
+      auto-rotate
+      shadow-intensity="1"
+      crossorigin="anonymous">
+      <button slot="ar-button">📱 Tap to View in AR</button>
+    </model-viewer>
   </div>
 
-  <model-viewer 
-    id="ar-viewer"
-    ar 
-    ar-modes="webxr quick-look"
-    camera-controls 
-    auto-rotate
-    shadow-intensity="1"
-    alt="Duck 3D Model"
-    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb">
-    
-    <!-- Built-in AR button (fallback if programmatic fails) -->
-    <button slot="ar-button" style="display:none;">📱 View in AR</button>
-  </model-viewer>
+  <script type="module">
+    const mv = document.getElementById('mv');
+    const btn = document.getElementById('ar-btn');
+    const status = document.getElementById('status');
 
-  <div id="debug"></div>
-
-  <script>
-    const viewer = document.getElementById('ar-viewer');
-    const trigger = document.getElementById('ar-trigger');
-    const debug = document.getElementById('debug');
-    const platformMsg = document.getElementById('platform-msg');
-
-    function log(msg) {
-      debug.innerHTML += `> ${msg}<br>`;
-      debug.scrollTop = debug.scrollHeight;
+    const log = (msg, type = '') => {
+      status.textContent = msg;
+      status.className = type;
       console.log('[AR]', msg);
+    };
+
+    // 1. Secure Context Check
+    if (!window.isSecureContext) {
+      log('⚠️ HTTPS required for WebXR AR.', 'error');
+      btn.textContent = 'Requires HTTPS';
+      btn.disabled = true;
+    } else {
+      log('✅ Secure context confirmed.');
     }
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      debug.classList.add('active');
-      log('Page loaded. Waiting for model-viewer...');
+    // 2. Wait for model-viewer to initialize (max 5s)
+    const mvReady = Promise.race([
+      customElements.whenDefined('model-viewer'),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('Model-viewer init timeout')), 5000))
+    ]);
 
-      await customElements.whenDefined('model-viewer');
-      log('model-viewer defined.');
+    try {
+      await mvReady;
+      log('✅ Component ready.');
+    } catch (e) {
+      log('❌ Component failed to load. Refresh or check network.', 'error');
+      return;
+    }
 
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isAndroid = /Android/.test(navigator.userAgent);
-      const isSecure = window.isSecureContext;
+    // 3. Model Load with Timeout
+    const loadTimeout = setTimeout(() => log('⏳ Model still loading... (slow network?)'), 3000);
+    
+    mv.addEventListener('load', () => {
+      clearTimeout(loadTimeout);
+      log('✅ Model loaded. Checking AR...', 'success');
+      checkAR();
+    }, { once: true });
 
-      if (!isSecure) {
-        log('⚠️ Not HTTPS. WebXR AR blocked by browser.');
-        trigger.textContent = '⚠️ Requires HTTPS';
-        trigger.disabled = true;
-        return;
-      }
+    mv.addEventListener('error', () => {
+      clearTimeout(loadTimeout);
+      log('❌ Model failed to load. Try again later.', 'error');
+    }, { once: true });
 
-      if (isIOS) {
-        platformMsg.style.display = 'block';
-        platformMsg.textContent = '🍎 iOS: Tapping AR will open Apple\'s native viewer (not in-browser camera). This is Apple\'s limitation.';
-        trigger.textContent = '📱 Open in AR (Quick Look)';
-      } else if (isAndroid) {
-        log('✅ Android detected. WebXR AR should work.');
-      } else {
-        log('💻 Desktop detected. AR will be disabled.');
-        trigger.textContent = '🖥️ Desktop: AR not available';
-        trigger.disabled = true;
-        return;
-      }
-
-      // Wait for model to load
-      await new Promise(resolve => {
-        viewer.addEventListener('load', resolve, { once: true });
-      });
-      log('Model loaded successfully.');
-
-      const canAR = viewer.canActivateAR();
-      log(`canActivateAR: ${canAR}`);
-
+    // 4. AR Capability Check
+    function checkAR() {
+      const canAR = mv.canActivateAR();
       if (canAR) {
-        trigger.disabled = false;
-        trigger.innerHTML = '📱 View in AR';
+        btn.disabled = false;
+        btn.textContent = '📱 View in AR';
+        btn.onclick = launchAR;
+        log('✅ AR ready. Tap button.');
       } else {
-        trigger.textContent = '⚠️ AR unavailable on this device';
-        trigger.disabled = true;
+        btn.textContent = '🖥️ 3D Preview Only';
+        btn.onclick = () => log('Tap & drag to rotate the model.');
+        log('ℹ️ AR not supported. 3D preview active.');
       }
-    });
+    }
 
-    trigger.addEventListener('click', async () => {
-      log('User tapped AR button.');
-      if (isSecure === false) return;
-
+    // 5. Launch AR with Fallback
+    async function launchAR() {
+      log('🚀 Launching AR session...');
       try {
-        // Official Google pattern: wait for next frame, then activate
-        await new Promise(r => requestAnimationFrame(r));
-        await viewer.activateAR();
-        log('activateAR() called successfully.');
+        await mv.activateAR();
+        log('✅ AR session active.');
       } catch (err) {
-        log(`❌ activateAR() failed: ${err.message}`);
-        // Fallback: show built-in AR button
+        log(`⚠️ Programmatic AR failed. Using fallback button.`, 'error');
+        // Show built-in AR button (Google's recommended fallback)
         document.querySelector('[slot="ar-button"]').style.display = 'block';
-        trigger.textContent = '⚠️ Tap the AR button above';
+        btn.style.display = 'none';
       }
-    });
+    }
   </script>
 </body>
 </html>
